@@ -21,7 +21,19 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "glut.h"
+#include "CarouselHorse0.10.550.h"
 
+#define XSIDE	5					// length of the x side of the grid
+#define X0      (-XSIDE/2.)			// where one side starts
+#define NX		100					// how many points in x
+#define DX		( XSIDE/(float)NX )	// change in x between the points
+
+#define YGRID	0.f
+
+#define ZSIDE	5					// length of the z side of the grid
+#define Z0      (-ZSIDE/2.)			// where one side starts
+#define NZ		100					// how many points in z
+#define DZ	( ZSIDE/(float)NZ )		// change in z between the points
 
 //	This is a sample OpenGL / GLUT program
 //
@@ -178,7 +190,10 @@ const int MS_PER_CYCLE = 10000;		// 10000 milliseconds = 10 seconds
 int		ActiveButton;			// current button that is down
 GLuint	AxesList;				// list to hold the axes
 int		AxesOn;					// != 0 means to draw the axes
-GLuint	BoxList;				// object display list
+GLuint	LibertyList;			// Libery obj display list
+GLuint	HorseList;				// Horse obj display list
+GLuint	BatmanList;				// Batman obj display list
+GLuint	GridList;				// Grid object display list
 int		DebugOn;				// != 0 means to print debugging info
 int		DepthCueOn;				// != 0 means to use intensity depth cueing
 int		DepthBufferOn;			// != 0 means to use the z-buffer
@@ -276,7 +291,7 @@ MulArray3(float factor, float a, float b, float c )
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
 //#include "bmptotexture.cpp"
-//#include "loadobjfile.cpp"
+#include "loadobjfile.cpp"
 //#include "keytime.cpp"
 //#include "glslprogram.cpp"
 
@@ -445,7 +460,23 @@ Display( )
 
 	// draw the box object by calling up its display list:
 
-	glCallList( BoxList );
+	glCallList(GridList);
+
+	glTranslatef(0, 0.5, 1);
+	glRotatef(-90, 0, 1, 0);
+	glScalef(0.5, 0.5, 0.5);
+	glCallList(HorseList);
+
+	glRotatef(90, 0, 1, 0); // reset rotation
+	glTranslatef(-2, -0.5, -2);
+	glRotatef(-90, 0, 1, 0);
+	glCallList(BatmanList);
+
+	glRotatef(90, 0, 1, 0); // reset rotation
+	glTranslatef(2, 0, -2);
+	glScalef(3, 3, 3);
+	glRotatef(-180, 0, 1, 0);
+	glCallList(LibertyList);
 
 #ifdef DEMO_Z_FIGHTING
 	if( DepthFightingOn != 0 )
@@ -825,57 +856,66 @@ InitLists( )
 
 	// create the object:
 
-	BoxList = glGenLists( 1 );
-	glNewList( BoxList, GL_COMPILE );
-
-		glBegin( GL_QUADS );
-
-			glColor3f( 1., 0., 0. );
-
-				glNormal3f( 1., 0., 0. );
-					glVertex3f(  dx, -dy,  dz );
-					glVertex3f(  dx, -dy, -dz );
-					glVertex3f(  dx,  dy, -dz );
-					glVertex3f(  dx,  dy,  dz );
-
-				glNormal3f(-1., 0., 0.);
-					glVertex3f( -dx, -dy,  dz);
-					glVertex3f( -dx,  dy,  dz );
-					glVertex3f( -dx,  dy, -dz );
-					glVertex3f( -dx, -dy, -dz );
-
-			glColor3f( 0., 1., 0. );
-
-				glNormal3f(0., 1., 0.);
-					glVertex3f( -dx,  dy,  dz );
-					glVertex3f(  dx,  dy,  dz );
-					glVertex3f(  dx,  dy, -dz );
-					glVertex3f( -dx,  dy, -dz );
-
-				glNormal3f(0., -1., 0.);
-					glVertex3f( -dx, -dy,  dz);
-					glVertex3f( -dx, -dy, -dz );
-					glVertex3f(  dx, -dy, -dz );
-					glVertex3f(  dx, -dy,  dz );
-
-			glColor3f(0., 0., 1.);
-
-				glNormal3f(0., 0., 1.);
-					glVertex3f(-dx, -dy, dz);
-					glVertex3f( dx, -dy, dz);
-					glVertex3f( dx,  dy, dz);
-					glVertex3f(-dx,  dy, dz);
-
-				glNormal3f(0., 0., -1.);
-					glVertex3f(-dx, -dy, -dz);
-					glVertex3f(-dx,  dy, -dz);
-					glVertex3f( dx,  dy, -dz);
-					glVertex3f( dx, -dy, -dz);
-
-		glEnd( );
-
+	BatmanList = glGenLists( 1 );
+	glNewList( BatmanList, GL_COMPILE );
+		LoadObjFile((char*)"batman.obj");
 	glEndList( );
 
+	HorseList = glGenLists(1);
+	glNewList(HorseList, GL_COMPILE);
+		glPushMatrix();
+			glRotatef(90.f, 0., 1., 0.);
+			glTranslatef(0., -1.1f, 0.f);
+			glBegin(GL_TRIANGLES);
+				for (int i = 0; i < HORSEntris; i++)
+				{
+					struct point p0 = HORSEpoints[HORSEtris[i].p0];
+					struct point p1 = HORSEpoints[HORSEtris[i].p1];
+					struct point p2 = HORSEpoints[HORSEtris[i].p2];
+
+					// fake "lighting" from above:
+
+					float p01[3], p02[3], n[3];
+					p01[0] = p1.x - p0.x;
+					p01[1] = p1.y - p0.y;
+					p01[2] = p1.z - p0.z;
+					p02[0] = p2.x - p0.x;
+					p02[1] = p2.y - p0.y;
+					p02[2] = p2.z - p0.z;
+					Cross(p01, p02, n);
+					Unit(n, n);
+					n[1] = (float)fabs(n[1]);
+					// simulating a glColor3f( 1., 1., 0. ) = yellow:
+					glColor3f(1.f * n[1], 1.f * n[1], 0.f * n[1]);
+
+					glVertex3f(p0.x, p0.y, p0.z);
+					glVertex3f(p1.x, p1.y, p1.z);
+					glVertex3f(p2.x, p2.y, p2.z);
+				}
+			glEnd();
+		glPopMatrix();
+	glEndList();
+
+	LibertyList = glGenLists(1);
+	glNewList(LibertyList, GL_COMPILE);
+		LoadObjFile((char*)"LibertStatue.obj");
+	glEndList();
+
+	GridList = glGenLists(1);
+	glNewList(GridList, GL_COMPILE);
+		//SetMaterial(0.6f, 0.6f, 0.6f, 30.f);
+		glNormal3f(0., 1., 0.);
+		for (int i = 0; i < NZ; i++)
+		{
+			glBegin(GL_QUAD_STRIP);
+			for (int j = 0; j < NX; j++)
+			{
+				glVertex3f(X0 + DX * (float)j, YGRID, Z0 + DZ * (float)(i + 0));
+				glVertex3f(X0 + DX * (float)j, YGRID, Z0 + DZ * (float)(i + 1));
+			}
+			glEnd();
+		}
+	glEndList();
 
 	// create the axes:
 
