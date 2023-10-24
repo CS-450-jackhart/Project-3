@@ -1,7 +1,23 @@
 ﻿  sample.cpp
-C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(913,46): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(913,19): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(914,46): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(914,19): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(294,22): warning C4838: conversion from 'int' to 'float' requires a narrowing conversion
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(294,22): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(294,25): warning C4838: conversion from 'int' to 'float' requires a narrowing conversion
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(294,25): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(294,28): warning C4838: conversion from 'int' to 'float' requires a narrowing conversion
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(294,28): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(462,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(463,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(504,26): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(504,20): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(504,14): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(510,25): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(510,20): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(510,14): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(951,46): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(951,19): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(952,46): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(952,19): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(960,12): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\jackh\Documents\School\CS 450\Project-3\sample.cpp(295): warning C4172: returning address of local variable or temporary: newCol
 sample.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
   Sample.vcxproj -> C:\Users\jackh\Documents\School\CS 450\Project-3\Debug\Sample.exe

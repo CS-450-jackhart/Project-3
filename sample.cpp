@@ -25,14 +25,14 @@
 
 #define XSIDE	5					// length of the x side of the grid
 #define X0      (-XSIDE/2.)			// where one side starts
-#define NX		100					// how many points in x
+#define NX		1000				// how many points in x
 #define DX		( XSIDE/(float)NX )	// change in x between the points
 
 #define YGRID	0.f
 
 #define ZSIDE	5					// length of the z side of the grid
 #define Z0      (-ZSIDE/2.)			// where one side starts
-#define NZ		100					// how many points in z
+#define NZ		1000				// how many points in z
 #define DZ	( ZSIDE/(float)NZ )		// change in z between the points
 
 //	This is a sample OpenGL / GLUT program
@@ -194,18 +194,24 @@ GLuint	LibertyList;			// Libery obj display list
 GLuint	HorseList;				// Horse obj display list
 GLuint	BatmanList;				// Batman obj display list
 GLuint	GridList;				// Grid object display list
+GLuint	LightSphere;			// Sphere to represent light
 int		DebugOn;				// != 0 means to print debugging info
 int		DepthCueOn;				// != 0 means to use intensity depth cueing
 int		DepthBufferOn;			// != 0 means to use the z-buffer
 int		DepthFightingOn;		// != 0 means to force the creation of z-fighting
 int		MainWindow;				// window id for main graphics window
 int		NowColor;				// index into Colors[ ]
-int		NowProjection;		// ORTHO or PERSP
+int		NowProjection;			// ORTHO or PERSP
 float	Scale;					// scaling factor
 int		ShadowsOn;				// != 0 means to turn shadows on
 float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
+float	LightR;					// Red of the lights
+float	LightG;					// Green of the lights
+float	LightB;					// Blue of the lights
+bool	SpotLight;				// Whether light should be spot or point
+bool	Frozen;					// Whether program is frozen
 
 
 // function prototypes:
@@ -283,11 +289,17 @@ MulArray3(float factor, float a, float b, float c )
 	return array;
 }
 
+float *
+DefineColor(int r, int g, int b) {
+	float newCol[3] = { r, g, b };
+	return newCol;
+}
+
 // these are here for when you need them -- just uncomment the ones you need:
 
-//#include "setmaterial.cpp"
-//#include "setlight.cpp"
-//#include "osusphere.cpp"
+#include "setmaterial.cpp"
+#include "setlight.cpp"
+#include "osusphere.cpp"
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
 //#include "bmptotexture.cpp"
@@ -365,85 +377,103 @@ Animate( )
 // draw the complete scene:
 
 void
-Display( )
+Display()
 {
 	if (DebugOn != 0)
 		fprintf(stderr, "Starting Display.\n");
 
 	// set which window we want to do the graphics into:
-	glutSetWindow( MainWindow );
+	glutSetWindow(MainWindow);
 
 	// erase the background:
-	glDrawBuffer( GL_BACK );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glDrawBuffer(GL_BACK);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glEnable( GL_DEPTH_TEST );
+	glEnable(GL_DEPTH_TEST);
 #ifdef DEMO_DEPTH_BUFFER
-	if( DepthBufferOn == 0 )
-		glDisable( GL_DEPTH_TEST );
+	if (DepthBufferOn == 0)
+		glDisable(GL_DEPTH_TEST);
 #endif
 
 
 	// specify shading to be flat:
 
-	glShadeModel( GL_FLAT );
+	glShadeModel(GL_FLAT);
 
 	// set the viewport to be a square centered in the window:
 
-	GLsizei vx = glutGet( GLUT_WINDOW_WIDTH );
-	GLsizei vy = glutGet( GLUT_WINDOW_HEIGHT );
+	GLsizei vx = glutGet(GLUT_WINDOW_WIDTH);
+	GLsizei vy = glutGet(GLUT_WINDOW_HEIGHT);
 	GLsizei v = vx < vy ? vx : vy;			// minimum dimension
-	GLint xl = ( vx - v ) / 2;
-	GLint yb = ( vy - v ) / 2;
-	glViewport( xl, yb,  v, v );
+	GLint xl = (vx - v) / 2;
+	GLint yb = (vy - v) / 2;
+	glViewport(xl, yb, v, v);
 
 
 	// set the viewing volume:
 	// remember that the Z clipping  values are given as DISTANCES IN FRONT OF THE EYE
 	// USE gluOrtho2D( ) IF YOU ARE DOING 2D !
 
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity( );
-	if( NowProjection == ORTHO )
-		glOrtho( -2.f, 2.f,     -2.f, 2.f,     0.1f, 1000.f );
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	if (NowProjection == ORTHO)
+		glOrtho(-2.f, 2.f, -2.f, 2.f, 0.1f, 1000.f);
 	else
-		gluPerspective( 70.f, 1.f,	0.1f, 1000.f );
+		gluPerspective(70.f, 1.f, 0.1f, 1000.f);
 
 	// place the objects into the scene:
 
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity( );
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
 	// set the eye position, look-at position, and up-vector:
 
-	gluLookAt( 0.f, 0.f, 3.f,     0.f, 0.f, 0.f,     0.f, 1.f, 0.f );
+	gluLookAt(0.f, 0.f, 3.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f);
 
 	// rotate the scene:
 
-	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );
-	glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f );
+	glRotatef((GLfloat)Yrot, 0.f, 1.f, 0.f);
+	glRotatef((GLfloat)Xrot, 1.f, 0.f, 0.f);
 
 	// uniformly scale the scene:
 
-	if( Scale < MINSCALE )
+	if (Scale < MINSCALE)
 		Scale = MINSCALE;
-	glScalef( (GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale );
+	glScalef((GLfloat)Scale, (GLfloat)Scale, (GLfloat)Scale);
 
 	// set the fog parameters:
 
-	if( DepthCueOn != 0 )
+	if (DepthCueOn != 0)
 	{
-		glFogi( GL_FOG_MODE, FOGMODE );
-		glFogfv( GL_FOG_COLOR, FOGCOLOR );
-		glFogf( GL_FOG_DENSITY, FOGDENSITY );
-		glFogf( GL_FOG_START, FOGSTART );
-		glFogf( GL_FOG_END, FOGEND );
-		glEnable( GL_FOG );
+		glFogi(GL_FOG_MODE, FOGMODE);
+		glFogfv(GL_FOG_COLOR, FOGCOLOR);
+		glFogf(GL_FOG_DENSITY, FOGDENSITY);
+		glFogf(GL_FOG_START, FOGSTART);
+		glFogf(GL_FOG_END, FOGEND);
+		glEnable(GL_FOG);
 	}
 	else
 	{
-		glDisable( GL_FOG );
+		glDisable(GL_FOG);
 	}
+
+	glEnable(GL_LIGHTING);
+
+	float lightPosX = sin(2 * F_2_PI * Time);
+	float lightPosZ = cos(2 * F_2_PI * Time);
+	float lightPosY = 2;
+
+	if (SpotLight)
+		SetSpotLight(GL_LIGHT0, lightPosX, lightPosY, lightPosZ, 0, -1, 0, LightR, LightG, LightB);
+	else
+		SetPointLight(GL_LIGHT0, lightPosX, lightPosY, lightPosZ, LightR, LightG, LightB);
+
+	glEnable(GL_LIGHT0);
+
+	glColor3f(LightR, LightG, LightB);
+	glTranslatef(lightPosX, lightPosY, lightPosZ);
+	glCallList(LightSphere);
+	glTranslatef(-lightPosX, -lightPosY, -lightPosZ);
 
 	// possibly draw the axes:
 
@@ -457,21 +487,27 @@ Display( )
 
 	glEnable( GL_NORMALIZE );
 
+	glShadeModel(GL_SMOOTH);
+
 
 	// draw the box object by calling up its display list:
 
+	SetMaterial(0.5, 0.5, 0.5, 75);
 	glCallList(GridList);
 
+	SetMaterial(1, 0, 0, 0);
 	glTranslatef(0, 0.5, 1);
 	glRotatef(-90, 0, 1, 0);
 	glScalef(0.5, 0.5, 0.5);
 	glCallList(HorseList);
 
+	SetMaterial(0.35, 0.69, 0.84, 125);
 	glRotatef(90, 0, 1, 0); // reset rotation
 	glTranslatef(-2, -0.5, -2);
 	glRotatef(-90, 0, 1, 0);
 	glCallList(BatmanList);
 
+	SetMaterial(0.44, 0.7, 0.53, 55);
 	glRotatef(90, 0, 1, 0); // reset rotation
 	glTranslatef(2, 0, -2);
 	glScalef(3, 3, 3);
@@ -517,6 +553,8 @@ Display( )
 	glLoadIdentity( );
 	glColor3f( 1.f, 1.f, 1.f );
 	//DoRasterString( 5.f, 5.f, 0.f, (char *)"Text That Doesn't" );
+
+	glDisable(GL_LIGHTING);
 
 	// swap the double-buffered framebuffers:
 
@@ -917,6 +955,11 @@ InitLists( )
 		}
 	glEndList();
 
+	LightSphere = glGenLists(1);
+	glNewList(LightSphere, GL_COMPILE);
+	OsuSphere(0.05, 20, 20);
+	glEndList();
+
 	// create the axes:
 
 	AxesList = glGenLists( 1 );
@@ -938,14 +981,58 @@ Keyboard( unsigned char c, int x, int y )
 
 	switch( c )
 	{
-		case 'o':
-		case 'O':
-			NowProjection = ORTHO;
-			break;
-
 		case 'p':
 		case 'P':
-			NowProjection = PERSP;
+			SpotLight = false;
+			break;
+
+		case 's':
+		case 'S':
+			SpotLight = true;
+			break;
+
+		case 'w':
+		case 'W':
+			LightR = 1;
+			LightG = 1;
+			LightB = 1;
+			break;
+
+		case 'r':
+		case 'R':
+			LightR = 1;
+			LightB = 0;
+			LightG = 0;
+			break;
+
+		case 'g':
+		case 'G':
+			LightR = 0;
+			LightG = 1;
+			LightB = 0;
+			break;
+
+		case 'b':
+		case 'B':
+			LightR = 0;
+			LightG = 0;
+			LightB = 1;
+			break;
+
+		case 'y':
+		case 'Y':
+			LightR = 1;
+			LightB = 0;
+			LightG = 1;
+			break;
+
+		case 'f':
+		case 'F':
+			Frozen = !Frozen;
+			if (Frozen)
+				glutIdleFunc(NULL);
+			else
+				glutIdleFunc(Animate);
 			break;
 
 		case 'q':
@@ -1077,6 +1164,9 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
+	LightR = 1; LightG = 1; LightB = 1;
+	SpotLight = false;
+	Frozen = false;
 }
 
 
